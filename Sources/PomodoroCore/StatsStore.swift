@@ -6,16 +6,19 @@ public final class StatsStore {
 
     public init(fileURL: URL) {
         self.fileURL = fileURL
-        guard let data = try? Data(contentsOf: fileURL) else {
-            records = []
-            return
-        }
         do {
-            records = try JSONDecoder().decode([WorkRecord].self, from: data)
+            records = try JSONDecoder().decode([WorkRecord].self, from: Data(contentsOf: fileURL))
+        } catch let error as CocoaError where error.code == .fileReadNoSuchFile {
+            records = []
         } catch {
-            // Keep the unreadable file for recovery instead of overwriting it on the next append.
+            // Unreadable or corrupt: keep it for recovery instead of overwriting it on the next append.
             let backup = fileURL.appendingPathExtension("corrupt-\(Int(Date().timeIntervalSince1970))")
-            try? FileManager.default.moveItem(at: fileURL, to: backup)
+            do {
+                try FileManager.default.moveItem(at: fileURL, to: backup)
+                NSLog("Pomodoro: could not read stats (\(error)); moved it to \(backup.path)")
+            } catch {
+                NSLog("Pomodoro: could not move unreadable stats aside: \(error)")
+            }
             records = []
         }
     }

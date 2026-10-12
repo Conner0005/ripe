@@ -24,6 +24,19 @@ final class StatsStoreTests: XCTestCase {
         XCTAssertEqual(StatsStore(fileURL: fileURL).records, [record])
     }
 
+    func testUnreadableFileIsKeptNotOverwritten() throws {
+        let original = WorkRecord(start: Date(timeIntervalSince1970: 1_000_000), seconds: 1500, completed: true)
+        try StatsStore(fileURL: fileURL).append(original)
+        try FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: fileURL.path)
+        defer { try? FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: fileURL.path) }
+
+        let store = StatsStore(fileURL: fileURL)
+        try store.append(WorkRecord(start: Date(), seconds: 60, completed: false))
+
+        let names = try FileManager.default.contentsOfDirectory(atPath: dir.path)
+        XCTAssertTrue(names.contains { $0.hasPrefix("stats.json.corrupt") }, "unreadable file should be kept, got \(names)")
+    }
+
     func testCorruptFileIsMovedAsideAndStartsEmpty() throws {
         try Data("garbage".utf8).write(to: fileURL)
         let store = StatsStore(fileURL: fileURL)

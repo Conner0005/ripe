@@ -24,6 +24,7 @@ final class AppModel: ObservableObject {
     private var activity: NSObjectProtocol?
     private var sleepObserver: NSObjectProtocol?
     private var sequenceWorkedSeconds = 0
+    private var pendingWork: PendingWork?
     private lazy var hotKey = HotKey { [weak self] in
         MainActor.assumeIsolated { self?.togglePause() }
     }
@@ -64,6 +65,7 @@ final class AppModel: ObservableObject {
 
     func stop() {
         handle(engine.stop(now: Date()))
+        commitPendingWork()
         stopTicker()
         sync()
     }
@@ -77,6 +79,7 @@ final class AppModel: ObservableObject {
     }
 
     private func start() {
+        commitPendingWork()
         sequenceWorkedSeconds = 0
         engine.start(settings: settings, now: Date())
         startTicker()
@@ -113,12 +116,19 @@ final class AppModel: ObservableObject {
     private func tick() {
         let now = Date()
         handle(engine.tick(now: now))
+        let idleSeconds = IdleDetector.secondsSinceLastInput()
+        let threshold = TimeInterval(settings.idleThresholdSeconds)
+        if let pending = pendingWork,
+           let record = pending.resolve(now: now, idleSeconds: idleSeconds, threshold: threshold) {
+            pendingWork = nil
+            save(record)
+        }
         let action = AutoPausePolicy.decide(
             enabled: settings.autoPauseEnabled,
             status: engine.status,
             phaseKind: engine.currentPhase?.kind,
-            idleSeconds: IdleDetector.secondsSinceLastInput(),
-            threshold: TimeInterval(settings.idleThresholdSeconds)
+            idleSeconds: idleSeconds,
+            threshold: threshold
         )
         switch action {
         case .pause(let rewind):
@@ -129,6 +139,9 @@ final class AppModel: ObservableObject {
         case .none:
             break
         }
+        if engine.status == .idle && pendingWork == nil {
+            stopTicker()
+        }
         sync()
     }
 
@@ -137,12 +150,14 @@ final class AppModel: ObservableObject {
             switch event {
             case .workLogged(let record):
                 sequenceWorkedSeconds += record.seconds
-                do {
-                    try statsStore.append(record)
-                } catch {
-                    NSLog("Pomodoro: failed to save stats: \(error)")
+                commitPendingWork()
+                // Idle as the phase ends: hold the record so the idle tail can be trimmed if the user is away.
+                if record.completed, settings.autoPauseEnabled,
+                   IdleDetector.secondsSinceLastInput() >= AutoPausePolicy.activityWindow {
+                    pendingWork = PendingWork(record: record, phaseEnd: Date())
+                } else {
+                    save(record)
                 }
-                refreshSummary()
             case .phaseCompleted(let phase, let next):
                 // The last phase is announced by .finished instead.
                 if let next {
@@ -153,9 +168,24 @@ final class AppModel: ObservableObject {
                 }
             case .finished:
                 notifier.announce(PhaseMessages.finished(workedSeconds: sequenceWorkedSeconds), settings: settings)
-                stopTicker()
+                if pendingWork == nil { stopTicker() } // otherwise tick() stops it once the pending record resolves
             }
         }
+    }
+
+    private func save(_ record: WorkRecord) {
+        guard record.seconds >= 1 else { return }
+        do {
+            try statsStore.append(record)
+        } catch {
+            NSLog("Pomodoro: failed to save stats: \(error)")
+        }
+        refreshSummary()
+    }
+
+    private func commitPendingWork() {
+        if let pendingWork { save(pendingWork.record) }
+        pendingWork = nil
     }
 
     private func sync() {
