@@ -20,6 +20,20 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            Section("Long break") {
+                Toggle("Take a long break", isOn: $model.settings.longBreakEnabled)
+                Stepper("Long break: \(model.settings.longBreakMinutes) min",
+                        value: $model.settings.longBreakMinutes, in: PomodoroSettings.longBreakRange)
+                    .disabled(!model.settings.longBreakEnabled)
+                Stepper("After every \(model.settings.longBreakEvery) sessions",
+                        value: $model.settings.longBreakEvery, in: PomodoroSettings.longBreakEveryRange)
+                    .disabled(!model.settings.longBreakEnabled)
+                if model.settings.longBreakEnabled && model.settings.repeats <= model.settings.longBreakEvery {
+                    Text("No long break will happen: Repeats must be more than \(model.settings.longBreakEvery).")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
             Section("Alerts") {
                 Toggle("Play sound", isOn: $model.settings.soundEnabled)
                 Picker("Sound", selection: $model.settings.soundName) {

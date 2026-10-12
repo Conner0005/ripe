@@ -9,11 +9,16 @@ public struct PomodoroSettings: Codable, Equatable {
     public var notificationsEnabled = true
     public var autoPauseEnabled = false
     public var idleThresholdSeconds = 60
+    public var longBreakEnabled = false
+    public var longBreakMinutes = 15
+    public var longBreakEvery = 4
 
     public static let workRange = 1...180
     public static let breakRange = 1...60
     public static let repeatsRange = 1...12
     public static let idleThresholdRange = 15...600
+    public static let longBreakRange = 1...60
+    public static let longBreakEveryRange = 2...12
     public static let soundNames = [
         "Basso", "Blow", "Bottle", "Frog", "Funk", "Glass", "Hero",
         "Morse", "Ping", "Pop", "Purr", "Sosumi", "Submarine", "Tink",
@@ -33,6 +38,9 @@ public struct PomodoroSettings: Codable, Equatable {
         notificationsEnabled = try container.decodeIfPresent(Bool.self, forKey: .notificationsEnabled) ?? fallback.notificationsEnabled
         autoPauseEnabled = try container.decodeIfPresent(Bool.self, forKey: .autoPauseEnabled) ?? fallback.autoPauseEnabled
         idleThresholdSeconds = try container.decodeIfPresent(Int.self, forKey: .idleThresholdSeconds) ?? fallback.idleThresholdSeconds
+        longBreakEnabled = try container.decodeIfPresent(Bool.self, forKey: .longBreakEnabled) ?? fallback.longBreakEnabled
+        longBreakMinutes = try container.decodeIfPresent(Int.self, forKey: .longBreakMinutes) ?? fallback.longBreakMinutes
+        longBreakEvery = try container.decodeIfPresent(Int.self, forKey: .longBreakEvery) ?? fallback.longBreakEvery
     }
 
     public func clamped() -> PomodoroSettings {
@@ -41,6 +49,8 @@ public struct PomodoroSettings: Codable, Equatable {
         settings.breakMinutes = Self.clamp(breakMinutes, to: Self.breakRange)
         settings.repeats = Self.clamp(repeats, to: Self.repeatsRange)
         settings.idleThresholdSeconds = Self.clamp(idleThresholdSeconds, to: Self.idleThresholdRange)
+        settings.longBreakMinutes = Self.clamp(longBreakMinutes, to: Self.longBreakRange)
+        settings.longBreakEvery = Self.clamp(longBreakEvery, to: Self.longBreakEveryRange)
         if !Self.soundNames.contains(soundName) {
             settings.soundName = PomodoroSettings().soundName
         }

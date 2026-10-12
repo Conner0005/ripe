@@ -24,7 +24,9 @@ public enum PhasePlan {
         for cycle in 1...settings.repeats {
             phases.append(Phase(kind: .work, cycle: cycle, duration: TimeInterval(settings.workMinutes * 60)))
             if cycle < settings.repeats {
-                phases.append(Phase(kind: .rest, cycle: cycle, duration: TimeInterval(settings.breakMinutes * 60)))
+                let isLong = settings.longBreakEnabled && cycle % settings.longBreakEvery == 0
+                let minutes = isLong ? settings.longBreakMinutes : settings.breakMinutes
+                phases.append(Phase(kind: .rest, cycle: cycle, duration: TimeInterval(minutes * 60)))
             }
         }
         return phases
