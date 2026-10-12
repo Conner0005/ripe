@@ -15,6 +15,13 @@ struct MenuContent: View {
         }
         Divider()
         Text("Today: \(TimeFormat.duration(model.summary.todaySeconds)) · \(model.summary.todaySessions) sessions")
+        Button("Statistics…") {
+            WindowPresenter.shared.show(id: "stats", title: "Statistics") { StatsView(model: model) }
+        }
+        Button("Settings…") {
+            WindowPresenter.shared.show(id: "settings", title: "Settings") { SettingsView(model: model) }
+        }
+        .keyboardShortcut(",")
         Divider()
         Button("Quit Pomodoro") { NSApp.terminate(nil) }
             .keyboardShortcut("q")
