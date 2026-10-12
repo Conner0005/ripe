@@ -6,9 +6,10 @@ struct PomodoroApp: App {
 
     var body: some Scene {
         MenuBarExtra {
-            MenuContent(model: model)
+            PopoverView(model: model)
         } label: {
             MenuBarLabel(model: model)
         }
+        .menuBarExtraStyle(.window)
     }
 }
