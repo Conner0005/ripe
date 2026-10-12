@@ -75,6 +75,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 380)
+        // A grouped Form scrolls, so it has no natural height; without one the window opens as a bare title bar.
+        .frame(width: 400, height: 600)
     }
 }
