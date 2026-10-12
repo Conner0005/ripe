@@ -70,11 +70,53 @@ public final class TimerEngine {
         lastTick = now
     }
 
+    /// Ends the current phase early. Partial work is logged; the next phase starts running.
+    @discardableResult
+    public func skip(now: Date) -> [EngineEvent] {
+        var events = tick(now: now)
+        guard status != .idle else { return events }
+        events += endCurrentPhase(at: now, completed: false)
+        if status != .idle {
+            status = .running
+            lastTick = now
+        }
+        return events
+    }
+
+    @discardableResult
+    public func stop(now: Date) -> [EngineEvent] {
+        var events = tick(now: now)
+        guard status != .idle else { return events }
+        if let record = partialWorkRecord() {
+            events.append(.workLogged(record))
+        }
+        status = .idle
+        remaining = 0
+        lastTick = nil
+        return events
+    }
+
+    /// Gives back time that shouldn't have counted (e.g. idle time), never beyond the phase length.
+    public func rewind(seconds: TimeInterval) {
+        guard let phase = currentPhase else { return }
+        remaining = min(phase.duration, remaining + max(0, seconds))
+    }
+
+    private func partialWorkRecord() -> WorkRecord? {
+        guard let phase = currentPhase, phase.kind == .work else { return nil }
+        let worked = Int((phase.duration - remaining).rounded())
+        return worked >= 1 ? WorkRecord(start: phaseStartedAt, seconds: worked, completed: false) : nil
+    }
+
     private func endCurrentPhase(at date: Date, completed: Bool) -> [EngineEvent] {
         let phase = phases[index]
         var events: [EngineEvent] = []
-        if completed, phase.kind == .work {
-            events.append(.workLogged(WorkRecord(start: phaseStartedAt, seconds: Int(phase.duration), completed: true)))
+        if completed {
+            if phase.kind == .work {
+                events.append(.workLogged(WorkRecord(start: phaseStartedAt, seconds: Int(phase.duration), completed: true)))
+            }
+        } else if let record = partialWorkRecord() {
+            events.append(.workLogged(record))
         }
         index += 1
         let next = index < phases.count ? phases[index] : nil
