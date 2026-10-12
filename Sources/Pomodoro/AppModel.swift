@@ -5,7 +5,10 @@ import SwiftUI
 @MainActor
 final class AppModel: ObservableObject {
     @Published var settings: PomodoroSettings {
-        didSet { settingsStore.save(settings) }
+        didSet {
+            settingsStore.save(settings)
+            applyHotKey()
+        }
     }
     @Published private(set) var status: EngineStatus = .idle
     @Published private(set) var phase: Phase?
@@ -21,6 +24,9 @@ final class AppModel: ObservableObject {
     private var activity: NSObjectProtocol?
     private var sleepObserver: NSObjectProtocol?
     private var sequenceWorkedSeconds = 0
+    private lazy var hotKey = HotKey { [weak self] in
+        MainActor.assumeIsolated { self?.togglePause() }
+    }
 
     init() {
         let settingsStore = SettingsStore()
@@ -38,6 +44,7 @@ final class AppModel: ObservableObject {
             MainActor.assumeIsolated { self?.pause(reason: .sleep) }
         }
         notifier.requestAuthorization()
+        applyHotKey()
     }
 
     func togglePause() {
@@ -63,6 +70,10 @@ final class AppModel: ObservableObject {
 
     func refreshSummary() {
         summary = StatsSummary(records: statsStore.records, now: Date())
+    }
+
+    private func applyHotKey() {
+        if settings.hotkeyEnabled { hotKey.register() } else { hotKey.unregister() }
     }
 
     private func start() {

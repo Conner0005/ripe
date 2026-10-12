@@ -46,4 +46,10 @@ final class LongBreakTests: XCTestCase {
         XCTAssertFalse(settings.longBreakEnabled)
         XCTAssertEqual(settings.longBreakEvery, 4)
     }
+
+    func testHotkeyEnabledByDefaultAndDecodedFromOldData() throws {
+        XCTAssertTrue(PomodoroSettings().hotkeyEnabled)
+        let old = try JSONDecoder().decode(PomodoroSettings.self, from: Data("{}".utf8))
+        XCTAssertTrue(old.hotkeyEnabled)
+    }
 }

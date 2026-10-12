@@ -4,6 +4,8 @@ import SwiftUI
 
 struct SettingsView: View {
     @ObservedObject var model: AppModel
+    @State private var launchAtLogin = LoginItem.isEnabled
+    @State private var loginError: String?
 
     var body: some View {
         Form {
@@ -54,6 +56,22 @@ struct SettingsView: View {
                 Text("Pauses when there's no mouse or keyboard activity and resumes when you're back. Idle time isn't counted as work.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            }
+            Section("General") {
+                Toggle("Launch at login", isOn: $launchAtLogin)
+                    .onChange(of: launchAtLogin) { _, enabled in
+                        do {
+                            try LoginItem.setEnabled(enabled)
+                            loginError = nil
+                        } catch {
+                            loginError = error.localizedDescription
+                            launchAtLogin = LoginItem.isEnabled
+                        }
+                    }
+                if let loginError {
+                    Text(loginError).font(.caption).foregroundStyle(.red)
+                }
+                Toggle("Start/pause with ⌥⌘P from any app", isOn: $model.settings.hotkeyEnabled)
             }
         }
         .formStyle(.grouped)
