@@ -25,6 +25,7 @@ final class AppModel: ObservableObject {
     private var sleepObserver: NSObjectProtocol?
     private var sequenceWorkedSeconds = 0
     private var pendingWork: PendingWork?
+    private var appTally = AppTally()
     private lazy var hotKey = HotKey { [weak self] in
         MainActor.assumeIsolated { self?.togglePause() }
     }
@@ -74,6 +75,8 @@ final class AppModel: ObservableObject {
         summary = StatsSummary(records: statsStore.records, now: Date())
     }
 
+    var records: [WorkRecord] { statsStore.records }
+
     private func applyHotKey() {
         if settings.hotkeyEnabled { hotKey.register() } else { hotKey.unregister() }
     }
@@ -81,6 +84,7 @@ final class AppModel: ObservableObject {
     private func start() {
         commitPendingWork()
         sequenceWorkedSeconds = 0
+        appTally = AppTally()
         engine.start(settings: settings, now: Date())
         startTicker()
         refreshSummary()
@@ -115,6 +119,7 @@ final class AppModel: ObservableObject {
 
     private func tick() {
         let now = Date()
+        sampleFrontApp()
         handle(engine.tick(now: now))
         let idleSeconds = IdleDetector.secondsSinceLastInput()
         let threshold = TimeInterval(settings.idleThresholdSeconds)
@@ -145,10 +150,21 @@ final class AppModel: ObservableObject {
         sync()
     }
 
+    /// One second of focus for whichever app is in front. Ripe's own windows (Statistics, Settings) don't count.
+    private func sampleFrontApp() {
+        guard settings.appTrackingEnabled, engine.status == .running, engine.currentPhase?.kind == .work else { return }
+        let front = NSWorkspace.shared.frontmostApplication
+        if front == NSRunningApplication.current { return }
+        appTally.add(front?.localizedName)
+    }
+
     private func handle(_ events: [EngineEvent]) {
         for event in events {
             switch event {
-            case .workLogged(let record):
+            case .workLogged(let logged):
+                let apps = settings.appTrackingEnabled ? appTally.scaled(to: logged.seconds) : nil
+                let record = WorkRecord(start: logged.start, seconds: logged.seconds, completed: logged.completed, apps: apps)
+                appTally = AppTally()
                 sequenceWorkedSeconds += record.seconds
                 commitPendingWork()
                 // Idle as the phase ends: hold the record so the idle tail can be trimmed if the user is away.

@@ -57,6 +57,12 @@ struct SettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+            Section("Insights") {
+                Toggle("Track which app I'm focusing in", isOn: $model.settings.appTrackingEnabled)
+                Text("Only app names and seconds, stored on this Mac. Shown in Statistics, never on the share card.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
             Section("General") {
                 Toggle("Launch at login", isOn: $launchAtLogin)
                     .onChange(of: launchAtLogin) { _, enabled in
@@ -76,6 +82,6 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
         // A grouped Form scrolls, so it has no natural height; without one the window opens as a bare title bar.
-        .frame(width: 400, height: 600)
+        .frame(width: 400, height: 680)
     }
 }
