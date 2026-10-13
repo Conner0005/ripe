@@ -53,4 +53,9 @@ final class SettingsStoreTests: XCTestCase {
         XCTAssertEqual(clamped.idleThresholdSeconds, 15)
         XCTAssertEqual(clamped.soundName, "Glass")
     }
+
+    func testAppTrackingDefaultsOnWhenMissing() {
+        defaults.set(Data(#"{"workMinutes":40}"#.utf8), forKey: SettingsStore.key)
+        XCTAssertTrue(SettingsStore(defaults: defaults).load().appTrackingEnabled)
+    }
 }

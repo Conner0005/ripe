@@ -18,6 +18,7 @@ public struct PendingWork: Equatable {
         guard idleSeconds >= threshold else { return nil }
         let idleInPhase = max(0, idleSeconds - now.timeIntervalSince(phaseEnd))
         let seconds = max(0, record.seconds - Int(idleInPhase.rounded()))
-        return WorkRecord(start: record.start, seconds: seconds, completed: record.completed)
+        return WorkRecord(start: record.start, seconds: seconds, completed: record.completed,
+                          apps: record.apps.flatMap { AppTally.scale($0, to: seconds) })
     }
 }

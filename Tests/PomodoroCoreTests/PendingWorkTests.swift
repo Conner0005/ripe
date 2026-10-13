@@ -25,4 +25,12 @@ final class PendingWorkTests: XCTestCase {
     func testTrimNeverGoesNegative() {
         XCTAssertEqual(pending.resolve(now: t0 + 1500, idleSeconds: 5000, threshold: 60)?.seconds, 0)
     }
+
+    func testResolveRescalesAppsToTrimmedSeconds() {
+        let record = WorkRecord(start: t0, seconds: 1500, completed: true, apps: ["Xcode": 1200, "Safari": 300])
+        let resolved = PendingWork(record: record, phaseEnd: t0 + 1500)
+            .resolve(now: t0 + 1520, idleSeconds: 60, threshold: 60)
+        XCTAssertEqual(resolved?.seconds, 1460)
+        XCTAssertEqual(resolved?.apps, ["Xcode": 1168, "Safari": 292])
+    }
 }

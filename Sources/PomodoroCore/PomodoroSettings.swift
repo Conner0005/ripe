@@ -13,6 +13,7 @@ public struct PomodoroSettings: Codable, Equatable {
     public var longBreakMinutes = 15
     public var longBreakEvery = 4
     public var hotkeyEnabled = true
+    public var appTrackingEnabled = true
 
     public static let workRange = 1...180
     public static let breakRange = 1...60
@@ -43,6 +44,7 @@ public struct PomodoroSettings: Codable, Equatable {
         longBreakMinutes = try container.decodeIfPresent(Int.self, forKey: .longBreakMinutes) ?? fallback.longBreakMinutes
         longBreakEvery = try container.decodeIfPresent(Int.self, forKey: .longBreakEvery) ?? fallback.longBreakEvery
         hotkeyEnabled = try container.decodeIfPresent(Bool.self, forKey: .hotkeyEnabled) ?? fallback.hotkeyEnabled
+        appTrackingEnabled = try container.decodeIfPresent(Bool.self, forKey: .appTrackingEnabled) ?? fallback.appTrackingEnabled
     }
 
     public func clamped() -> PomodoroSettings {

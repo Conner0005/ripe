@@ -46,6 +46,23 @@ final class StatsStoreTests: XCTestCase {
         try store.append(WorkRecord(start: Date(), seconds: 60, completed: false))
         XCTAssertEqual(StatsStore(fileURL: fileURL).records.count, 1)
     }
+
+    func testOldRecordsWithoutAppsStillLoad() throws {
+        try Data(#"[{"start":0,"seconds":1500,"completed":true}]"#.utf8).write(to: fileURL)
+        XCTAssertEqual(StatsStore(fileURL: fileURL).records,
+                       [WorkRecord(start: Date(timeIntervalSinceReferenceDate: 0), seconds: 1500, completed: true)])
+    }
+
+    func testAppsRoundTripAndNilIsNotWritten() throws {
+        let withApps = WorkRecord(start: Date(timeIntervalSince1970: 1_000_000), seconds: 60, completed: true, apps: ["Xcode": 60])
+        let without = WorkRecord(start: Date(timeIntervalSince1970: 1_000_100), seconds: 30, completed: false)
+        let store = StatsStore(fileURL: fileURL)
+        try store.append(withApps)
+        try store.append(without)
+        XCTAssertEqual(StatsStore(fileURL: fileURL).records, [withApps, without])
+        let json = try String(contentsOf: fileURL, encoding: .utf8)
+        XCTAssertEqual(json.components(separatedBy: "\"apps\"").count - 1, 1, json)
+    }
 }
 
 final class StatsSummaryTests: XCTestCase {
