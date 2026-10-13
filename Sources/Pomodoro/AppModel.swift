@@ -106,7 +106,7 @@ final class AppModel: ObservableObject {
         RunLoop.main.add(timer, forMode: .common) // .common keeps ticking while the menu is open
         ticker = timer
         activity = ProcessInfo.processInfo.beginActivity(
-            options: .userInitiatedAllowingIdleSystemSleep, reason: "Pomodoro timer running"
+            options: .userInitiatedAllowingIdleSystemSleep, reason: "Ripe timer running"
         )
     }
 
@@ -194,7 +194,7 @@ final class AppModel: ObservableObject {
         do {
             try statsStore.append(record)
         } catch {
-            NSLog("Pomodoro: failed to save stats: \(error)")
+            NSLog("Ripe: failed to save stats: \(error)")
         }
         refreshSummary()
     }

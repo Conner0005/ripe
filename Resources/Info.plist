@@ -5,7 +5,9 @@
     <key>CFBundleIdentifier</key>
     <string>com.conner.pomodoro</string>
     <key>CFBundleName</key>
-    <string>Pomodoro</string>
+    <string>Ripe</string>
+    <key>CFBundleDisplayName</key>
+    <string>Ripe</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundleExecutable</key>
