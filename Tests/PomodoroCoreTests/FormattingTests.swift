@@ -44,4 +44,14 @@ final class FormattingTests: XCTestCase {
             PhaseMessage(title: "All sessions done", body: "You focused for 1h 40m.")
         )
     }
+
+    func testHourRange() {
+        XCTAssertEqual(TimeFormat.hourRange(start: 9), "9–11am")
+        XCTAssertEqual(TimeFormat.hourRange(start: 11), "11am–1pm")
+        XCTAssertEqual(TimeFormat.hourRange(start: 10), "10am–12pm")
+        XCTAssertEqual(TimeFormat.hourRange(start: 12), "12–2pm")
+        XCTAssertEqual(TimeFormat.hourRange(start: 22), "10pm–12am")
+        XCTAssertEqual(TimeFormat.hourRange(start: 23), "11pm–1am")
+        XCTAssertEqual(TimeFormat.hourRange(start: 0), "12–2am")
+    }
 }

@@ -21,4 +21,17 @@ public enum TimeFormat {
         }
         return "\(minutes)m"
     }
+
+    /// A two-hour window starting at `start` (0–23): "9–11am", "11am–1pm", "11pm–1am".
+    public static func hourRange(start: Int) -> String {
+        let end = (start + 2) % 24
+        let startSuffix = start < 12 ? "am" : "pm"
+        let endSuffix = end < 12 ? "am" : "pm"
+        let first = startSuffix == endSuffix ? "\(hour12(start))" : "\(hour12(start))\(startSuffix)"
+        return "\(first)–\(hour12(end))\(endSuffix)"
+    }
+
+    private static func hour12(_ hour: Int) -> Int {
+        hour % 12 == 0 ? 12 : hour % 12
+    }
 }
