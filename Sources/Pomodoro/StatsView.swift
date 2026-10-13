@@ -1,9 +1,12 @@
+import AppKit
 import Charts
 import PomodoroCore
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct StatsView: View {
     @ObservedObject var model: AppModel
+    @State private var cardURL: URL?
 
     var body: some View {
         let summary = model.summary
@@ -23,10 +26,22 @@ struct StatsView: View {
             .frame(height: 180)
             Divider()
             insights
+            HStack {
+                Spacer()
+                if let cardURL {
+                    ShareLink(item: cardURL) { Label("Share…", systemImage: "square.and.arrow.up") }
+                    Button("Save Image…") { save(cardURL) }
+                } else {
+                    Text("Couldn't create the share image").font(.caption).foregroundStyle(.secondary)
+                }
+            }
         }
         .padding(20)
         .frame(width: 460)
         .onAppear { model.refreshSummary() } // "today" rolls over at midnight
+        .task(id: model.summary) { // re-render the card whenever the numbers change
+            cardURL = ShareCard.png(for: ShareCardData(records: model.records, now: Date()), now: Date())
+        }
     }
 
     private var insights: some View {
@@ -61,6 +76,19 @@ struct StatsView: View {
             Text(TimeFormat.duration(app.seconds)).monospacedDigit().frame(width: 60, alignment: .trailing)
         }
         .font(.callout)
+    }
+
+    private func save(_ cardURL: URL) {
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = cardURL.lastPathComponent
+        panel.allowedContentTypes = [.png]
+        guard panel.runModal() == .OK, let destination = panel.url else { return }
+        do {
+            try? FileManager.default.removeItem(at: destination)
+            try FileManager.default.copyItem(at: cardURL, to: destination)
+        } catch {
+            NSAlert(error: error).runModal()
+        }
     }
 
     private func tile(_ title: String, _ value: String, _ detail: String) -> some View {
