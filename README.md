@@ -40,3 +40,7 @@ An app built on your own Mac opens without the warning above.
 Run the tests with `swift test --disable-swift-testing`.
 
 To make a release zip (universal, Apple silicon + Intel): `./scripts/release.sh`, which writes `build/Ripe-<version>.zip`.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
