@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ripe — a Pomodoro timer for your Mac's menu bar</title>
+<meta name="description" content="Ripe is a free Pomodoro timer that lives in your Mac's menu bar. The tomato ripens from green to red as you focus.">
+<meta property="og:title" content="Ripe">
+<meta property="og:description" content="A Pomodoro timer that ripens in your Mac's menu bar.">
+<meta property="og:image" content="https://conner0005.github.io/ripe/icon.png">
+<link rel="icon" href="icon.png">
+<style>
+  :root {
+    --bg: #fff8f4;
+    --surface: #ffffff;
+    --text: #2a1d1a;
+    --muted: #7a6560;
+    --line: #f0e2dc;
+    --red: #e5403a;
+    --red-dark: #c92f2a;
+    --green: #2f8a4c;
+    --shadow: 0 20px 50px rgba(120, 40, 30, 0.14);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1413;
+      --surface: #241c1b;
+      --text: #f6ece8;
+      --muted: #b09d98;
+      --line: #3a2f2d;
+      --red: #ff5a4e;
+      --red-dark: #e5403a;
+      --green: #5cc27a;
+      --shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 17px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  }
+  a { color: var(--red); }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+
+  /* Hero */
+  .hero { text-align: center; padding-top: 72px; padding-bottom: 40px; }
+  .hero img.icon { width: 132px; height: 132px; filter: drop-shadow(0 12px 24px rgba(200, 50, 40, 0.25)); }
+  h1 { font-size: clamp(44px, 8vw, 68px); letter-spacing: -0.03em; margin: 12px 0 4px; line-height: 1.05; }
+  .tagline { font-size: clamp(19px, 3vw, 24px); color: var(--muted); margin: 0 auto 32px; max-width: 30em; }
+  .download {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--red); color: #fff; text-decoration: none;
+    font-weight: 600; font-size: 19px;
+    padding: 16px 30px; border-radius: 999px;
+    box-shadow: 0 10px 24px rgba(229, 64, 58, 0.35);
+    transition: transform .15s ease, background .15s ease;
+  }
+  .download:hover { background: var(--red-dark); transform: translateY(-1px); }
+  .download svg { width: 20px; height: 20px; }
+  .meta { color: var(--muted); font-size: 15px; margin-top: 14px; }
+  .meta a { color: var(--muted); }
+
+  /* Ripening strip */
+  .menubar {
+    margin: 48px auto 0; max-width: 520px;
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 12px 22px; box-shadow: var(--shadow);
+    font: 600 15px/1 -apple-system, BlinkMacSystemFont, sans-serif; font-variant-numeric: tabular-nums;
+  }
+  .menubar span { display: inline-flex; align-items: center; gap: 6px; }
+  .menubar svg { width: 20px; height: 20px; }
+  .caption { color: var(--muted); font-size: 15px; text-align: center; margin-top: 10px; }
+
+  /* Sections */
+  section.wrap { padding-top: 56px; padding-bottom: 56px; }
+  h2 { font-size: clamp(28px, 4.5vw, 38px); letter-spacing: -0.02em; margin: 0 0 12px; line-height: 1.15; }
+  .lead { color: var(--muted); margin: 0 0 32px; max-width: 34em; }
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+  .shot { width: 100%; height: auto; border-radius: 14px; box-shadow: var(--shadow); border: 1px solid var(--line); display: block; }
+  .shot.narrow { max-width: 340px; margin: 0 auto; }
+  .shot.card { max-width: 300px; margin: 0 auto; border-radius: 18px; }
+
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .feature { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px; }
+  .feature b { display: block; margin-bottom: 4px; font-size: 18px; }
+  .feature p { margin: 0; color: var(--muted); font-size: 16px; }
+  .feature .emoji { font-size: 26px; display: block; margin-bottom: 8px; }
+
+  /* Install */
+  .steps { counter-reset: step; list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; max-width: 680px; }
+  .steps li { counter-increment: step; position: relative; padding: 18px 20px 18px 66px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 20px; top: 16px;
+    width: 30px; height: 30px; border-radius: 50%; background: var(--red); color: #fff;
+    font-weight: 700; display: grid; place-items: center; font-size: 15px;
+  }
+  .note { color: var(--muted); font-size: 15px; margin-top: 18px; max-width: 680px; }
+  code { font: 14px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--line); padding: 2px 6px; border-radius: 6px; word-break: break-all; }
+
+  footer.wrap { border-top: 1px solid var(--line); padding-top: 28px; padding-bottom: 48px; color: var(--muted); font-size: 15px; text-align: center; }
+  footer.wrap a { color: var(--muted); }
+
+  @media (max-width: 760px) {
+    .hero { padding-top: 48px; }
+    .split { grid-template-columns: 1fr; gap: 28px; }
+    .split .text { order: -1; }
+    .features { grid-template-columns: 1fr; }
+    .menubar { padding: 10px 14px; font-size: 13px; }
+    .menubar .hide-sm { display: none; }
+    .steps li { padding-left: 60px; }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="tomato" viewBox="0 0 18 18">
+      <circle cx="9" cy="10" r="7"></circle>
+      <path d="M9 4.2c-1.4-1.6-3.4-1.4-4.4-.6 1.5.2 2.6.8 3.2 1.6-1.6 0-2.8.6-3.3 1.4C6 6.4 7.6 6.2 9 5.6c1.4.6 3 .8 4.5 1 -.5-.8-1.7-1.4-3.3-1.4.6-.8 1.7-1.4 3.2-1.6-1-.8-3-1-4.4.6z" fill="#21783d"></path>
+      <path d="M9 4.4V2" stroke="#21783d" stroke-width="1.3" stroke-linecap="round" fill="none"></path>
+    </symbol>
+  </defs>
+</svg>
+
+<header class="hero wrap">
+  <img class="icon" src="icon.png" alt="Ripe app icon" width="132" height="132">
+  <h1>Ripe</h1>
+  <p class="tagline">A Pomodoro timer that lives in your Mac's menu bar. The tomato ripens as you focus.</p>
+  <a class="download" href="https://github.com/Conner0005/ripe/releases/latest/download/Ripe.zip">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12M6 11l6 6 6-6M5 20h14"/></svg>
+    Download for Mac
+  </a>
+  <p class="meta">Free · macOS 14 Sonoma or later · Apple silicon &amp; Intel · <a href="#install">Install help</a></p>
+
+  <div class="menubar" aria-label="The menu bar tomato ripening during a session">
+    <span><svg style="fill:#4db866"><use href="#tomato"/></svg>24:59</span>
+    <span class="hide-sm"><svg style="fill:#a6b04a"><use href="#tomato"/></svg>18:40</span>
+    <span><svg style="fill:#f99a33"><use href="#tomato"/></svg>12:30</span>
+    <span class="hide-sm"><svg style="fill:#f0662c"><use href="#tomato"/></svg>06:15</span>
+    <span><svg style="fill:#e5403a"><use href="#tomato"/></svg>00:01</span>
+  </div>
+  <p class="caption">Green when you start, red when it's time for a break.</p>
+</header>
+
+<main>
+  <section class="wrap">
+    <div class="split">
+      <img class="shot narrow" src="popover.png" width="560" height="856" alt="Ripe's timer panel: a progress ring with time left, session dots, and play, skip and stop buttons" loading="lazy">
+      <div class="text">
+        <h2>One click from the menu bar</h2>
+        <p class="lead">Click the tomato for the timer. Space starts and pauses; ⌥⌘P works from any app. No Dock icon, no windows in your way.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <h2>Made for actually focusing</h2>
+    <p class="lead">Everything a Pomodoro timer needs, and a few things it usually doesn't have.</p>
+    <div class="features">
+      <div class="feature"><span class="emoji">🍅</span><b>Work, break, long break</b><p>Set the lengths and how many rounds. Sounds and notifications when a phase ends.</p></div>
+      <div class="feature"><span class="emoji">💤</span><b>Pauses when you're away</b><p>Stops counting when you step away from the keyboard or your Mac sleeps, and resumes when you're back.</p></div>
+      <div class="feature"><span class="emoji">📊</span><b>Focus insights</b><p>Your best focus hours and which apps you focused in, this week.</p></div>
+      <div class="feature"><span class="emoji">📸</span><b>Share your week</b><p>A ready-made Instagram Story image of your week, with AirDrop to your phone.</p></div>
+      <div class="feature"><span class="emoji">🔒</span><b>Private by design</b><p>No account, no server. Everything stays on your Mac, and app tracking can be turned off.</p></div>
+      <div class="feature"><span class="emoji">🚀</span><b>Launch at login</b><p>Starts with your Mac so the tomato is always there.</p></div>
+    </div>
+  </section>
+
+  <section class="wrap">
+    <div class="split">
+      <div class="text">
+        <h2>See where your focus goes</h2>
+        <p class="lead">Statistics shows today and the last 7 days, your best two-hour window for focus, and the apps you spent focus time in.</p>
+      </div>
+      <img class="shot" src="stats.png" width="920" height="1102" alt="Ripe's Statistics window with daily totals, best focus hours and top apps" loading="lazy">
+    </div>
+  </section>
+
+  <section class="wrap">
+    <div class="split">
+      <img class="shot card" src="card.png" width="506" height="900" alt="A share card showing a week's focus time, a 7-day bar chart and best focus hours" loading="lazy">
+      <div class="text">
+        <h2>Post your week</h2>
+        <p class="lead">One click makes a 1080×1920 Story image of your week. App names never appear on it.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap" id="install">
+    <h2>Installing</h2>
+    <p class="lead">Ripe is free and isn't distributed through the App Store, so macOS asks you to approve it the first time.</p>
+    <ol class="steps">
+      <li><a href="https://github.com/Conner0005/ripe/releases/latest/download/Ripe.zip">Download Ripe.zip</a> and double-click it to unzip.</li>
+      <li>Drag <b>Ripe</b> into your <b>Applications</b> folder, then open it.</li>
+      <li>When macOS says it can't verify Ripe, click <b>Done</b>. Open <b>System Settings → Privacy &amp; Security</b>, scroll down, and click <b>Open Anyway</b> next to Ripe. You only do this once.</li>
+      <li>Look for the 🍅 in your menu bar. To move it, hold <b>⌘</b> and drag it.</li>
+    </ol>
+    <p class="note">Prefer Terminal? <code>xattr -dr com.apple.quarantine /Applications/Ripe.app</code> skips step 3. Or <a href="https://github.com/Conner0005/ripe#build-from-source">build it from source</a>.</p>
+  </section>
+</main>
+
+<footer class="wrap">
+  Ripe is open source under the MIT license · <a href="https://github.com/Conner0005/ripe">Source on GitHub</a> · <a href="https://github.com/Conner0005/ripe/releases">All releases</a>
+</footer>
+
+</body>
+</html>
