@@ -7,6 +7,7 @@ import UniformTypeIdentifiers
 struct StatsView: View {
     @ObservedObject var model: AppModel
     @State private var cardURL: URL?
+    @State private var stickerCopied = false
 
     var body: some View {
         let summary = model.summary
@@ -31,6 +32,13 @@ struct StatsView: View {
                 if let cardURL {
                     ShareLink(item: cardURL) { Label("Share…", systemImage: "square.and.arrow.up") }
                     Button("Save Image…") { save(cardURL) }
+                    Menu(stickerCopied ? "Copied" : "Copy Sticker") {
+                        ForEach(StickerStyle.allCases) { style in
+                            Button(style.title) { copySticker(style) }
+                        }
+                    }
+                    .fixedSize()
+                    .help("Copy your week without a background, to paste into an Instagram Story")
                 } else {
                     Text("Couldn't create the share image").font(.caption).foregroundStyle(.secondary)
                 }
@@ -91,6 +99,16 @@ struct StatsView: View {
                 if shown { model.settings.shareHiddenApps.remove(app) } else { model.settings.shareHiddenApps.insert(app) }
             }
         )
+    }
+
+    private func copySticker(_ style: StickerStyle) {
+        let data = ShareCardData(records: model.records, now: Date(), hiddenApps: model.settings.shareHiddenApps)
+        guard ShareCard.copySticker(for: data, style: style) else { return }
+        stickerCopied = true
+        Task {
+            try? await Task.sleep(for: .seconds(2))
+            stickerCopied = false
+        }
     }
 
     private func save(_ cardURL: URL) {

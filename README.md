@@ -6,7 +6,7 @@ A Pomodoro timer that lives in your Mac's menu bar. The tomato ripens from green
 - Auto-pause when you step away; pauses when your Mac sleeps
 - Start/pause from any app with ⌥⌘P
 - Statistics: today, this week, best focus hours, and which apps you focused in
-- Share your week as an Instagram Story image (1080×1920)
+- Share your week as an Instagram Story image (1080×1920), or copy a transparent sticker to paste over your own photo
 
 Everything stays on your Mac. App tracking records only app names and seconds, and can be turned off in Settings.
 
