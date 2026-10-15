@@ -14,7 +14,7 @@ Requires macOS 14 Sonoma or later. Runs on Apple silicon and Intel Macs.
 
 ## Install
 
-1. Download `Ripe-<version>.zip` from [Releases](../../releases) and unzip it.
+1. Download **[Ripe.zip](https://github.com/Conner0005/ripe/releases/latest/download/Ripe.zip)** (or visit the [download page](https://conner0005.github.io/ripe/)) and unzip it.
 2. Drag **Ripe.app** into **Applications**.
 3. Open it. Because Ripe isn't notarized by Apple, macOS will say it can't verify the app the first time:
    - Click **Done** (or **OK**), then open **System Settings → Privacy & Security**.
@@ -39,7 +39,9 @@ An app built on your own Mac opens without the warning above.
 
 Run the tests with `swift test --disable-swift-testing`.
 
-To make a release zip (universal, Apple silicon + Intel): `./scripts/release.sh`, which writes `build/Ripe-<version>.zip`.
+To make a release zip (universal, Apple silicon + Intel): `./scripts/release.sh`, which writes `build/Ripe.zip`. Attach it to a GitHub Release with `gh release create v<version> build/Ripe.zip`.
+
+The download page lives in `site/`. After committing changes to it, run `./scripts/publish-site.sh` to update https://conner0005.github.io/ripe/.
 
 ## License
 
