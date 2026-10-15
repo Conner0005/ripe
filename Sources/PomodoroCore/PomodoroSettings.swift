@@ -14,6 +14,8 @@ public struct PomodoroSettings: Codable, Equatable {
     public var longBreakEvery = 4
     public var hotkeyEnabled = true
     public var appTrackingEnabled = true
+    /// Apps the user unticked for the share card; empty means every top app is shown.
+    public var shareHiddenApps: Set<String> = []
 
     public static let workRange = 1...180
     public static let breakRange = 1...60
@@ -45,6 +47,7 @@ public struct PomodoroSettings: Codable, Equatable {
         longBreakEvery = try container.decodeIfPresent(Int.self, forKey: .longBreakEvery) ?? fallback.longBreakEvery
         hotkeyEnabled = try container.decodeIfPresent(Bool.self, forKey: .hotkeyEnabled) ?? fallback.hotkeyEnabled
         appTrackingEnabled = try container.decodeIfPresent(Bool.self, forKey: .appTrackingEnabled) ?? fallback.appTrackingEnabled
+        shareHiddenApps = try container.decodeIfPresent(Set<String>.self, forKey: .shareHiddenApps) ?? fallback.shareHiddenApps
     }
 
     public func clamped() -> PomodoroSettings {

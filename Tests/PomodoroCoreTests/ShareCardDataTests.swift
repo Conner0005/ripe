@@ -24,4 +24,36 @@ final class ShareCardDataTests: XCTestCase {
         XCTAssertEqual(data.days.last?.seconds, 1500)
         XCTAssertEqual(data.bestHoursStart, 9)
     }
+
+    private func appRecords(now: Date, calendar: Calendar) -> [WorkRecord] {
+        let start = calendar.date(byAdding: .hour, value: -3, to: now)!
+        return [
+            WorkRecord(start: start, seconds: 3000, completed: true,
+                       apps: ["Xcode": 1200, "Figma": 700, "Slack": 500, "Safari": 300, "Notes": 200, "Mail": 100]),
+        ]
+    }
+
+    func testAppsAreTheTopFiveWhenNothingIsHidden() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+        let now = calendar.date(from: DateComponents(year: 2026, month: 10, day: 10, hour: 18))!
+        let data = ShareCardData(records: appRecords(now: now, calendar: calendar), now: now, calendar: calendar)
+        XCTAssertEqual(data.apps.map(\.name), ["Xcode", "Figma", "Slack", "Safari", "Notes"])
+        XCTAssertEqual(data.apps.first?.seconds, 1200)
+    }
+
+    func testHiddenAppsAreLeftOffWithoutPullingInTheSixth() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+        let now = calendar.date(from: DateComponents(year: 2026, month: 10, day: 10, hour: 18))!
+        let data = ShareCardData(records: appRecords(now: now, calendar: calendar), now: now,
+                                 hiddenApps: ["Slack", "Xcode"], calendar: calendar)
+        XCTAssertEqual(data.apps.map(\.name), ["Figma", "Safari", "Notes"])
+    }
+
+    func testAppsEmptyWithoutAppData() {
+        let now = Date()
+        let data = ShareCardData(records: [WorkRecord(start: now, seconds: 1500, completed: true)], now: now)
+        XCTAssertEqual(data.apps, [])
+    }
 }

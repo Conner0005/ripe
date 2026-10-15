@@ -58,4 +58,17 @@ final class SettingsStoreTests: XCTestCase {
         defaults.set(Data(#"{"workMinutes":40}"#.utf8), forKey: SettingsStore.key)
         XCTAssertTrue(SettingsStore(defaults: defaults).load().appTrackingEnabled)
     }
+
+    func testShareHiddenAppsDefaultsEmptyWhenMissing() {
+        defaults.set(Data(#"{"workMinutes":40}"#.utf8), forKey: SettingsStore.key)
+        XCTAssertEqual(SettingsStore(defaults: defaults).load().shareHiddenApps, [])
+    }
+
+    func testShareHiddenAppsRoundTrips() {
+        var settings = PomodoroSettings()
+        settings.shareHiddenApps = ["Slack"]
+        let store = SettingsStore(defaults: defaults)
+        store.save(settings)
+        XCTAssertEqual(store.load().shareHiddenApps, ["Slack"])
+    }
 }

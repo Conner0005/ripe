@@ -59,7 +59,7 @@ struct SettingsView: View {
             }
             Section("Insights") {
                 Toggle("Track which app I'm focusing in", isOn: $model.settings.appTrackingEnabled)
-                Text("Only app names and seconds, stored on this Mac. Shown in Statistics, never on the share card.")
+                Text("Only app names and seconds, stored on this Mac. Shown in Statistics, where you choose which apps appear on the share card.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

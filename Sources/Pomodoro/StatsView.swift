@@ -39,8 +39,10 @@ struct StatsView: View {
         .padding(20)
         .frame(width: 460)
         .onAppear { model.refreshSummary() } // "today" rolls over at midnight
-        .task(id: model.summary) { // re-render the card whenever the numbers change
-            cardURL = ShareCard.png(for: ShareCardData(records: model.records, now: Date()), now: Date())
+        .task(id: CardInputs(summary: model.summary, hiddenApps: model.settings.shareHiddenApps)) {
+            // re-render the card whenever the numbers or the ticked apps change
+            let data = ShareCardData(records: model.records, now: Date(), hiddenApps: model.settings.shareHiddenApps)
+            cardURL = ShareCard.png(for: data, now: Date())
         }
     }
 
@@ -66,6 +68,10 @@ struct StatsView: View {
 
     private func appRow(_ app: AppTime, max: Int) -> some View {
         HStack(spacing: 8) {
+            Toggle("Show \(app.name) on share card", isOn: shownOnCard(app.name))
+                .toggleStyle(.checkbox)
+                .labelsHidden()
+                .help("Show on share card")
             Text(app.name).frame(width: 120, alignment: .leading).lineLimit(1)
             GeometryReader { geo in
                 RoundedRectangle(cornerRadius: 3)
@@ -76,6 +82,15 @@ struct StatsView: View {
             Text(TimeFormat.duration(app.seconds)).monospacedDigit().frame(width: 60, alignment: .trailing)
         }
         .font(.callout)
+    }
+
+    private func shownOnCard(_ app: String) -> Binding<Bool> {
+        Binding(
+            get: { !model.settings.shareHiddenApps.contains(app) },
+            set: { shown in
+                if shown { model.settings.shareHiddenApps.remove(app) } else { model.settings.shareHiddenApps.insert(app) }
+            }
+        )
     }
 
     private func save(_ cardURL: URL) {
@@ -101,4 +116,9 @@ struct StatsView: View {
         .padding(12)
         .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 8))
     }
+}
+
+private struct CardInputs: Equatable {
+    let summary: StatsSummary
+    let hiddenApps: Set<String>
 }

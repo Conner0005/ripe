@@ -7,8 +7,11 @@ struct ShareCardView: View {
     let data: ShareCardData
     private let cream = Color(red: 1, green: 0.96, blue: 0.92)
 
+    /// With apps on the card, the ring, bars and gaps shrink so everything fits in 1920pt.
+    private var compact: Bool { !data.apps.isEmpty }
+
     var body: some View {
-        VStack(spacing: 70) {
+        VStack(spacing: compact ? 48 : 70) {
             HStack(spacing: 24) {
                 Image(nsImage: TomatoImage.image(for: .idle)).resizable().frame(width: 96, height: 96)
                 Text("Ripe").font(.system(size: 88, weight: .bold, design: .rounded))
@@ -20,11 +23,11 @@ struct ShareCardView: View {
                     .rotationEffect(.degrees(-90))
                 VStack(spacing: 8) {
                     Text(TimeFormat.duration(data.weekSeconds))
-                        .font(.system(size: 130, weight: .bold, design: .rounded))
+                        .font(.system(size: compact ? 104 : 130, weight: .bold, design: .rounded))
                     Text("focused this week").font(.system(size: 44, weight: .medium, design: .rounded))
                 }
             }
-            .frame(width: 620, height: 620)
+            .frame(width: compact ? 460 : 620, height: compact ? 460 : 620)
             bars
             VStack(spacing: 18) {
                 Text("\(data.weekSessions) \(data.weekSessions == 1 ? "session" : "sessions") this week")
@@ -33,6 +36,7 @@ struct ShareCardView: View {
                 }
             }
             .font(.system(size: 52, weight: .semibold, design: .rounded))
+            if compact { apps }
         }
         .foregroundStyle(cream)
         .frame(width: 1080, height: 1920)
@@ -48,13 +52,31 @@ struct ShareCardView: View {
                 VStack(spacing: 16) {
                     RoundedRectangle(cornerRadius: 14)
                         .fill(cream.opacity(day.seconds > 0 ? 1 : 0.3))
-                        .frame(width: 80, height: max(16, 300 * CGFloat(day.seconds) / CGFloat(maxSeconds)))
+                        .frame(width: 80, height: max(16, (compact ? 220 : 300) * CGFloat(day.seconds) / CGFloat(maxSeconds)))
                     Text(symbols[Calendar.current.component(.weekday, from: day.day) - 1])
                         .font(.system(size: 40, weight: .semibold, design: .rounded))
                 }
             }
         }
-        .frame(height: 380, alignment: .bottom)
+        .frame(height: compact ? 290 : 380, alignment: .bottom)
+    }
+
+    private var apps: some View {
+        VStack(spacing: 14) {
+            Text("Top apps").font(.system(size: 40, weight: .bold, design: .rounded)).opacity(0.85)
+            ForEach(data.apps) { app in
+                HStack {
+                    Text(app.name).lineLimit(1).truncationMode(.tail)
+                    Spacer(minLength: 32)
+                    Text(TimeFormat.duration(app.seconds)).monospacedDigit()
+                }
+                .font(.system(size: 44, weight: .semibold, design: .rounded))
+            }
+        }
+        .padding(.horizontal, 48)
+        .padding(.vertical, 32)
+        .frame(width: 820)
+        .background(cream.opacity(0.15), in: RoundedRectangle(cornerRadius: 36))
     }
 }
 
